@@ -9,10 +9,5 @@ namespace Chatter.Core.Tests
 {
     public class TestClass
     {
-        [Fact]
-        public void Fail()
-        {
-            Assert.True(false);
-        }
     }
 }

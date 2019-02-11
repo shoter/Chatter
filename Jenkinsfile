@@ -8,9 +8,8 @@ pipeline
             steps
             {
                 script {
-                def msbuild = tool name: 'MSBuild', type: 'hudson.plugins.msbuild.MsBuildInstallation'
-                bat "${msbuild} Chatter.sln /t:Restore /p:Configuration=Release"
-                bat "${msbuild} Chatter.sln /p:Configuration=Release"
+                bat "\"${tool '15.0 Visual Studio Community'}\" Chatter.sln /t:Restore /p:Configuration=Release"
+                bat "\"${tool '15.0 Visual Studio Community'}\" Chatter.sln /p:Configuration=Release"
                 } 
                 
             }

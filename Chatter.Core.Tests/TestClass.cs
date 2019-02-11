@@ -14,5 +14,11 @@ namespace Chatter.Core.Tests
         {
             Assert.True(false);
         }
+
+        [Fact]
+        public void superFail()
+        {
+            throw new Exception("ASDASDASD");
+        }
     }
 }

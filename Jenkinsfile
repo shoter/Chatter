@@ -19,13 +19,5 @@ pipeline
                 bat "dotnet test .\\Chatter.Core.Tests\\Chatter.Core.Tests.csproj"
             }
         }
-        
-        stage('Create Pull request')
-        {
-            steps
-            {
-                
-            }
-        }
     }
 }

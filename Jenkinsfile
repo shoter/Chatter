@@ -23,17 +23,5 @@ pipeline
                 bat "dotnet test .\\Chatter.Core.Tests\\Chatter.Core.Tests.csproj"
             }
         }
-
-        stage('Merge to master')
-        {
-            when
-            {
-                expression { "${branch_name}" == "develop" }
-            }
-            steps
-            {
-                echo "Tutaj bym mergowal"
-            }
-        }
     }
 }

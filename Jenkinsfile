@@ -8,6 +8,7 @@ pipeline
             steps
             {
                 script {
+                echo "Branch name: ${branch_name}"
                 bat "\"${tool 'MsBuild'}MsBuild.exe\" Chatter.sln /t:Restore /p:Configuration=Release"
                 bat "\"${tool 'MsBuild'}MSBuild.exe\" Chatter.sln /p:Configuration=Release"
                 } 

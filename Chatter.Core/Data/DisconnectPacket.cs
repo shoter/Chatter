@@ -7,11 +7,14 @@ using System.Threading.Tasks;
 namespace Chatter.Core.Data
 {
     [Serializable]
-    public class DisconnectPacket : Packet
+    public class DisconnectPacket : AuthorizedPacket
     {
-        public DisconnectPacket()
-            : base(PacketType.Disconnect)
-        { }
+        public DisconnectPacket(string username, string secret)
+            : base(PacketType.Disconnect, username, secret)
+        {
+        }
+    
             
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using Chatter.Core.Data;
+﻿using Chatter.Common;
+using Chatter.Core.Data;
 using Chatter.Core.Server.Exceptions;
 using NLog;
 using System;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Chatter.Core.Server
 {
-    public class ChatterServer
+    public class ChatterServer : Disposable
     {
         public List<ConnectedClient> Clients { get; } = new List<ConnectedClient>();
         public uint Port { get; private set; }
@@ -47,76 +48,75 @@ namespace Chatter.Core.Server
 
             Thread thread = new Thread(new ParameterizedThreadStart((_) =>
             {
-                MainLoop(mainLoopTokenSource.Token);
+                mainLoop(mainLoopTokenSource.Token);
             }));
 
             thread.Start();
         }
 
-        private void MainLoop(CancellationToken token)
+        private void mainLoop(CancellationToken token)
         {
             TcpListener listener = new TcpListener(Address, (int)Port);
             listener.Start();
 
             while (token.IsCancellationRequested == false)
             {
-                Socket socket = listener.AcceptSocket();
-
-
-
-                if (socket.RemoteEndPoint is IPEndPoint == false)
-                    continue;
-
-                IPEndPoint remoteIp = socket.RemoteEndPoint as IPEndPoint;
-
-                string msg = string.Empty;
-
-                using (NetworkStream s = new NetworkStream(socket))
+                using (Socket socket = listener.AcceptSocket())
                 {
-                    try
+                    if (socket.RemoteEndPoint is IPEndPoint == false)
+                        continue;
+
+                    IPEndPoint remoteIp = socket.RemoteEndPoint as IPEndPoint;
+
+                    string msg = string.Empty;
+
+                    using (NetworkStream s = new NetworkStream(socket))
                     {
-                        Packet packet = PacketReader.ReadPacket(s);
+                        try
+                        {
+                            Packet packet = PacketReader.ReadPacket(s);
 
-                        switch(packet)
-                        {
-                            case SendMessagePacket sendMessagePacket:
-                            case AskForPeoplePacket askPacket:
-                                {
-                                    // EndPoint endPoint = 
-                                    // authorize 
-                                    break;
-                                }
-                        }
-                        
-                        switch(packet)
-                        {
-                            case SendMessagePacket sendMessagePacket:
-                                {
-                                    // Send message to everybody connected.
-                                    break;
-                                }
-                            case ConnectPacket connectPacket:
-                                {
-                                    if(Clients.Any(c => c.Username == connectPacket.Username))
+                            switch (packet)
+                            {
+                                case SendMessagePacket sendMessagePacket:
+                                case AskForPeoplePacket askPacket:
                                     {
-                                        SendMessage(s, new ConnectFailed("User with this name is already connected!"));
-
+                                        // EndPoint endPoint = 
+                                        // authorize 
+                                        break;
                                     }
-                                    else
+                            }
+
+                            switch (packet)
+                            {
+                                case SendMessagePacket sendMessagePacket:
                                     {
-                                        SendMessage(s, new ConnectSuccessfullPacket());
-                                        this.Clients.Add(new ConnectedClient()
+                                        // Send message to everybody connected.
+                                        break;
+                                    }
+                                case ConnectPacket connectPacket:
+                                    {
+                                        if (Clients.Any(c => c.Username == connectPacket.Username))
                                         {
-                                            Username = connectPacket.Username
-                                        });
+                                            SendMessage(s, new ConnectFailed("User with this name is already connected!"));
+
+                                        }
+                                        else
+                                        {
+                                            SendMessage(s, new ConnectSuccessfullPacket());
+                                            this.Clients.Add(new ConnectedClient()
+                                            {
+                                                Username = connectPacket.Username
+                                            });
+                                        }
+                                        break;
                                     }
-                                    break;
-                                }
+                            }
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.Log(LogLevel.Error, e, "During reading a packet");
+                        catch (Exception e)
+                        {
+                            Logger.Log(LogLevel.Error, e, "During reading a packet");
+                        }
                     }
                 }
             }
@@ -132,5 +132,11 @@ namespace Chatter.Core.Server
         {
             mainLoopTokenSource.Cancel();
         }
+
+        protected override void FreeManagedObjects()
+        {
+            mainLoopTokenSource.Cancel();
+        }
+
     }
 }

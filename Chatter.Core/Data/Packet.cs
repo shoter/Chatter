@@ -26,6 +26,6 @@ namespace Chatter.Core.Data
             {PacketType.ConnectFailed, typeof(ConnectFailed) },
         };
 
-        public PacketType PacketType { get; set; }
+        public PacketType PacketType { get; internal set; }
     }
 }

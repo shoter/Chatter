@@ -30,14 +30,14 @@ namespace Chatter.Core.Tests.Integration.Client
         [Fact]
         public void OnAskPeople_WithoutConnecting_Error()
         {
-            Packet packet = SendPacket(new AskForPeoplePacket());
+            Packet packet = SendPacket(new AskForPeoplePacket("Randomusername", "ShadySecret"));
             Assert.True(packet is ErrorPacket);
         }
 
         [Fact]
         public void OnSendMessage_WithoutConnect_ShouldReturnError()
         {
-            Packet packet = SendPacket(new SendMessagePacket("Message", "shoter", DateTime.Now));
+            Packet packet = SendPacket(new SendMessagePacket("Message", "shoter", DateTime.Now, "Shady secret"));
             Assert.True(packet is ErrorPacket);
         }
 

@@ -26,6 +26,7 @@ namespace Chatter.Core
             } while (read > 0);*/
 
             int size = 0;
+            stream.ReadTimeout = 5000;
 
             using (var br = new BinaryReader(stream, Encoding.BigEndianUnicode, leaveOpen: true))
             {

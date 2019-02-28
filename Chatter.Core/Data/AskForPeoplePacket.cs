@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace Chatter.Core.Data
 {
     [Serializable]
-    public class AskForPeoplePacket : Packet
+    public class AskForPeoplePacket : AuthorizedPacket
     {
-        public AskForPeoplePacket()
-            :base(PacketType.AskForPeople)
+        public AskForPeoplePacket(string username, string secret)
+            :base(PacketType.AskForPeople, username, secret)
         { }
     }
 }

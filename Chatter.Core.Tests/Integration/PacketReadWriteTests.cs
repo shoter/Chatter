@@ -17,12 +17,13 @@ namespace Chatter.Core.Tests.Integration
         [Fact]
         public void SendMessagePacket_ShouldBeWriteableAndReadable()
         {
-            var packet = new SendMessagePacket("Test message", "tester", DateTime.Now);
-            var read = CreateAndRead(packet);
+            var packet = new SendMessagePacket("Test message", "tester", DateTime.Now, "ShadySecret");
+            var read = createAndRead(packet);
 
             Assert.Equal(packet.Message, read.Message);
             Assert.Equal(packet.Time, read.Time);
             Assert.Equal(packet.Username, read.Username);
+            Assert.Equal(packet.Secret, read.Secret);
         }
 
         [Fact]
@@ -35,7 +36,7 @@ namespace Chatter.Core.Tests.Integration
                 "ゆみ"
             });
 
-            var read = CreateAndRead(packet);
+            var read = createAndRead(packet);
 
             // If names would be read in different order or smth.
             var packetUsers = packet.Usernames.OrderBy(u => u);
@@ -47,18 +48,28 @@ namespace Chatter.Core.Tests.Integration
         [Fact]
         public void DisconnectPacket_ShouldBeWriteableAndReadable()
         {
-            // it tests all other packets which have no props. It would (should?) behave the same.
-            var packet = new DisconnectPacket();
-            DisconnectPacket read = CreateAndRead(packet);
+            var packet = new DisconnectPacket("username", "secret");
+            DisconnectPacket read = createAndRead(packet);
 
-            Assert.NotNull(read);
+            Assert.Equal(packet.Secret, read.Secret);
+            Assert.Equal(packet.Username, read.Username);
+        }
+
+        [Fact]
+        public void AskForPeoplePacket_ShoudBeWriteableAndReadable()
+        {
+            var packet = new AskForPeoplePacket("username", "secret");
+            AskForPeoplePacket read = createAndRead(packet);
+
+            Assert.Equal(packet.Secret, read.Secret);
+            Assert.Equal(packet.Username, read.Username);
         }
 
         [Fact]
         public void ConnectFailed_ShouldBeWriteableAndReadable()
         {
             var packet = new ConnectFailed("You did not know the code");
-            ConnectFailed read = CreateAndRead(packet);
+            ConnectFailed read = createAndRead(packet);
 
             Assert.Equal(packet.ErrorMessage, read.ErrorMessage);
         }
@@ -67,12 +78,12 @@ namespace Chatter.Core.Tests.Integration
         public void ConnectPacket_ShouldBeWriteableAndReadable()
         {
             var packet = new ConnectPacket("avaJ sucks");
-            ConnectPacket read = CreateAndRead(packet);
+            ConnectPacket read = createAndRead(packet);
 
             Assert.Equal(packet.Username, read.Username);
         }
 
-        private TPacket CreateAndRead<TPacket>(TPacket packet)
+        private TPacket createAndRead<TPacket>(TPacket packet)
             where TPacket : Packet
         {
             byte[] bytes = packetWriter.CreatePacket(packet);

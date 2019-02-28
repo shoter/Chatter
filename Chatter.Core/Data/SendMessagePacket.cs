@@ -7,18 +7,16 @@ using System.Threading.Tasks;
 namespace Chatter.Core.Data
 {
     [Serializable]
-    public class SendMessagePacket : Packet
+    public class SendMessagePacket : AuthorizedPacket
     {
-        public SendMessagePacket(string message, string username, DateTime time)
-            :base(PacketType.SendMessage)
+        public SendMessagePacket(string message, string username, DateTime time, string secret)
+            :base(PacketType.SendMessage, username, secret)
         {
             this.Message = message;
-            this.Username = username;
             this.Time = time;
         }
 
         public string Message { get; internal set; }
-        public string Username { get; internal set; }
         public DateTime Time { get; internal set; }
 
     }

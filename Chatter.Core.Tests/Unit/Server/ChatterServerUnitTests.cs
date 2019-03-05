@@ -9,9 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace Chatter.Core.Tests.Integration.Server
+namespace Chatter.Core.Tests.Unit.Server
 {
-    public class ChatterServerIntegrationTests
+    public class ChatterServerUnitTests
     {
         [Fact]
         public void Start_CannotStartTwice_ShouldThrowException()

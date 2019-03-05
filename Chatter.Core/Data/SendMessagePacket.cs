@@ -9,8 +9,8 @@ namespace Chatter.Core.Data
     [Serializable]
     public class SendMessagePacket : AuthorizedPacket
     {
-        public SendMessagePacket(string message, string username, DateTime time, string secret)
-            :base(PacketType.SendMessage, username, secret)
+        public SendMessagePacket(string message, string username, DateTime time)
+            :base(PacketType.SendMessage, username)
         {
             this.Message = message;
             this.Time = time;

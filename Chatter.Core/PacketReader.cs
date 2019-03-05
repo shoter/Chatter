@@ -11,22 +11,12 @@ namespace Chatter.Core
 {
     public class PacketReader : IPacketReader
     {
-        public Packet ReadPacket(Stream stream)
+        public Packet ReadPacket(Stream stream) => ReadPacketAsync(stream).Result;
+
+
+        public async Task<Packet> ReadPacketAsync(Stream stream)
         {
-            /*
-            byte[] buffer = new byte[16 * 64];
-
-            int read;
-            int offset = 0;
-
-            do
-            {
-                read = stream.Read(buffer, offset, 64);
-                offset += read;
-            } while (read > 0);*/
-
             int size = 0;
-            stream.ReadTimeout = 5000;
 
             using (var br = new BinaryReader(stream, Encoding.BigEndianUnicode, leaveOpen: true))
             {
@@ -34,7 +24,7 @@ namespace Chatter.Core
             }
 
             byte[] data = new byte[size];
-            stream.Read(data, 0, size);
+            await stream.ReadAsync(data, 0, size);
 
 
             using (var ms = new MemoryStream(data))

@@ -9,14 +9,12 @@ namespace Chatter.Core.Data
     [Serializable]
     public abstract class AuthorizedPacket : Packet
     {
-        public AuthorizedPacket(PacketType type, string username, string secret)
+        public AuthorizedPacket(PacketType type, string username)
              : base(type)
         {
-            this.Secret = secret;
             this.Username = username;
         }
 
-        public string Secret { get; internal set; }
         public string Username { get; internal set; }
     }
 }

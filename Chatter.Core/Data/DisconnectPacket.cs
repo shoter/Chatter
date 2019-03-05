@@ -9,8 +9,8 @@ namespace Chatter.Core.Data
     [Serializable]
     public class DisconnectPacket : AuthorizedPacket
     {
-        public DisconnectPacket(string username, string secret)
-            : base(PacketType.Disconnect, username, secret)
+        public DisconnectPacket(string username)
+            : base(PacketType.Disconnect, username)
         {
         }
     

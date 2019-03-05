@@ -8,16 +8,25 @@ using System.Net.Sockets;
 using System.Threading;
 using Xunit;
 
-namespace Chatter.Core.Tests.Integration.Client
+namespace Chatter.Core.Tests.Integration.Server
 {
-    public class ChatterServerTests
+    public class ChatterServerIntTests : IDisposable
     {
         ChatterServer server;
         
-        public ChatterServerTests()
+        public ChatterServerIntTests()
         {
             server = new ChatterServer(new PacketReader(), new PacketWriter(), new NullLogger(new LogFactory()));
             server.Start(IPAddress.Parse("127.0.0.1"), 9000);
+            int i = 0;
+            while(server.IsRunning == false)
+            {
+                Thread.Sleep(100);
+                if(i++ > 10)
+                {
+                    throw new Exception("Server did not start!");
+                }
+            }
         }
 
         [Fact]
@@ -30,14 +39,14 @@ namespace Chatter.Core.Tests.Integration.Client
         [Fact]
         public void OnAskPeople_WithoutConnecting_Error()
         {
-            Packet packet = SendPacket(new AskForPeoplePacket("Randomusername", "ShadySecret"));
+            Packet packet = SendPacket(new AskForPeoplePacket("Randomusername"));
             Assert.True(packet is ErrorPacket);
         }
 
         [Fact]
         public void OnSendMessage_WithoutConnect_ShouldReturnError()
         {
-            Packet packet = SendPacket(new SendMessagePacket("Message", "shoter", DateTime.Now, "Shady secret"));
+            Packet packet = SendPacket(new SendMessagePacket("Message", "shoter", DateTime.Now));
             Assert.True(packet is ErrorPacket);
         }
 
@@ -60,10 +69,14 @@ namespace Chatter.Core.Tests.Integration.Client
             {
                 var bytes = pw.CreatePacket(packet);
                 s.Write(bytes, 0, bytes.Length);
-                return pr.ReadPacket(s);
+                var returnPacket = pr.ReadPacket(s);
+                return returnPacket;
             }
         }
 
-
+        public void Dispose()
+        {
+            server.Dispose();
+        }
     }
 }

@@ -17,6 +17,8 @@ namespace Chatter.Core.Server
     public class ChatterServer : Disposable
     {
         public List<ConnectedClient> Clients { get; } = new List<ConnectedClient>();
+        public List<Packet> PacketsToSendToConnected { get; set; } = new List<Packet>();
+        public bool IsRunning { get; private set; } = false;
         public uint Port { get; private set; }
         public IPAddress Address { get; private set; }
 
@@ -58,67 +60,133 @@ namespace Chatter.Core.Server
         {
             TcpListener listener = new TcpListener(Address, (int)Port);
             listener.Start();
+            IsRunning = true;
 
-            while (token.IsCancellationRequested == false)
+            Task<Socket> socketTask = null;
+            List<Packet> packetsToSend = new List<Packet>();
+
+           
+            while(token.IsCancellationRequested == false)
             {
-                using (Socket socket = listener.AcceptSocket())
+                List<Packet> futurePacketsToSend = new List<Packet>();
+                // try to get new connection
+
+                if (socketTask?.IsCompleted ?? false)
                 {
-                    if (socket.RemoteEndPoint is IPEndPoint == false)
-                        continue;
-
-                    IPEndPoint remoteIp = socket.RemoteEndPoint as IPEndPoint;
-
-                    string msg = string.Empty;
-
-                    using (NetworkStream s = new NetworkStream(socket))
+                    if (socketTask.IsCompletedSuccessfully)
                     {
+                        // process socket
                         try
                         {
-                            Packet packet = PacketReader.ReadPacket(s);
-
-                            switch (packet)
-                            {
-                                case SendMessagePacket sendMessagePacket:
-                                case AskForPeoplePacket askPacket:
-                                    {
-                                        // EndPoint endPoint = 
-                                        // authorize 
-                                        break;
-                                    }
-                            }
-
-                            switch (packet)
-                            {
-                                case SendMessagePacket sendMessagePacket:
-                                    {
-                                        // Send message to everybody connected.
-                                        break;
-                                    }
-                                case ConnectPacket connectPacket:
-                                    {
-                                        if (Clients.Any(c => c.Username == connectPacket.Username))
-                                        {
-                                            SendMessage(s, new ConnectFailed("User with this name is already connected!"));
-
-                                        }
-                                        else
-                                        {
-                                            SendMessage(s, new ConnectSuccessfullPacket());
-                                            this.Clients.Add(new ConnectedClient()
-                                            {
-                                                Username = connectPacket.Username
-                                            });
-                                        }
-                                        break;
-                                    }
-                            }
+                            processNewSocket(socketTask);
                         }
                         catch (Exception e)
                         {
-                            Logger.Log(LogLevel.Error, e, "During reading a packet");
+                            Logger.Log(LogLevel.Error, e);
                         }
                     }
+
+                    socketTask = null;
                 }
+                else if (socketTask == null)
+                {
+                    socketTask = listener.AcceptSocketAsync();
+                }
+
+                removeDisconnectedClients();
+
+                packetsToSend = processExistingSockets(packetsToSend);
+            }
+            listener.Stop();
+            IsRunning = false;
+        }
+
+        private List<Packet> processExistingSockets(List<Packet> packetsToSend)
+        {
+            List<Packet> newPacketsToSend = new List<Packet>();
+            foreach (var client in Clients)
+            {
+                using (var stream = new NetworkStream(client.Socket, false))
+                {
+                    //receive data
+                    while (stream.DataAvailable)
+                    {
+                        var packet = PacketReader.ReadPacket(stream);
+                        switch (packet)
+                        {
+                            case SendMessagePacket msgPacket:
+                                {
+                                    newPacketsToSend.Add(msgPacket);
+                                    break;
+                                }
+                            case AskForPeoplePacket ask:
+                                {
+                                    newPacketsToSend.Add(new PeopleListPacket(Clients.Select(c => c.Username).ToList()));
+                                    break;
+                                }
+                            default:
+                                {
+                                    SendMessage(stream, new ErrorPacket("Packet not handled!"));
+                                    break;
+                                }
+                        }
+                    }
+
+                    //send Data
+
+                    foreach (var packet in packetsToSend)
+                    {
+                        SendMessage(stream, packet);
+                    }
+                }
+            }
+
+            return newPacketsToSend;
+        }
+
+        private void processNewSocket(Task<Socket> socketTask)
+        {
+            Socket socket = socketTask.Result;
+            using (var stream = new NetworkStream(socket, false))
+            {
+                var packet = PacketReader.ReadPacket(stream);
+
+                switch (packet)
+                {
+                    case ConnectPacket connectPacket:
+                        {
+                            if (Clients.Any(c => c.Username == connectPacket.Username))
+                            {
+                                SendMessage(stream, new ConnectFailed("Username is taken!"));
+                            }
+                            else
+                            {
+                                Clients.Add(new ConnectedClient(socket, connectPacket.Username));
+                                SendMessage(stream, new ConnectSuccessfullPacket());
+                            }
+
+                            break;
+                        }
+                    default:
+                        {
+                            SendMessage(stream, new ErrorPacket("Wrong packet type!"));
+                            break;
+                        }
+                }
+            }
+        }
+
+        private void removeDisconnectedClients()
+        {
+            for (int i = 0; i < Clients.Count;)
+            {
+                if (Clients[i].Socket.Connected == false)
+                {
+                    PacketsToSendToConnected.Add(new DisconnectPacket(Clients[i].Username));
+                    Clients.RemoveAt(i);
+                }
+                else
+                    ++i;
             }
         }
 
@@ -126,17 +194,24 @@ namespace Chatter.Core.Server
         {
             byte[] bytes = PacketWriter.CreatePacket(p);
             s.Write(bytes, 0, bytes.Length);
+            s.Flush();
         }
 
         public void Stop()
         {
             mainLoopTokenSource.Cancel();
+            while (IsRunning)
+            {
+                Thread.Sleep(10);
+            }
         }
 
-        protected override void FreeManagedObjects()
+        protected override void FreeUnmanagedObjects()
         {
-            mainLoopTokenSource.Cancel();
+            Stop();
         }
+
+
 
     }
 }

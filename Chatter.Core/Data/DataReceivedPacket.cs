@@ -7,10 +7,9 @@ using System.Threading.Tasks;
 namespace Chatter.Core.Data
 {
     [Serializable]
-    public class ConnectSuccessfullPacket : Packet
+    public class DataReceivedPacket : Packet
     {
-        public ConnectSuccessfullPacket()
-        :base(PacketType.ConnectSuccessfull)
+        public DataReceivedPacket() : base(PacketType.DataReceived)
         {
         }
     }

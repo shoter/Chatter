@@ -7,13 +7,11 @@ using System.Threading.Tasks;
 namespace Chatter.Core.Data
 {
     [Serializable]
-    public class ConnectFailed : Packet
+    public class ConnectFailed :  ErrorPacket
     {
         public ConnectFailed(string message)
-            :base(PacketType.ConnectFailed)
+            :base(message, PacketType.ConnectFailed)
         {
-            this.ErrorMessage = message;
         }
-        public string ErrorMessage { get; internal set; }
     }
 }

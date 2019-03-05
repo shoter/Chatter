@@ -13,22 +13,22 @@ namespace Chatter.Core.Tests.Unit
         [Fact]
         public void Connect_WrongPort_ShouldThrowException()
         {
-            var app = new ChatterClient();
+            var app = new ChatterClient(new PacketReader(), new PacketWriter());
             Assert.Throws<ArgumentException>(() => app.Connect("127.0.0.1", 65536, "asdas"));
         }
 
         [Fact]
         public void Connect_EmptyUsername_ShouldThrowException()
         {
-            var app = new ChatterClient();
+            var app = new ChatterClient(new PacketReader(), new PacketWriter());
             Assert.Throws<ArgumentException>(() => app.Connect("127.0.0.1", 123, string.Empty));
         }
         
         [Fact]
         public void Connect_WhitespaceUsername_ShouldThrowException()
         {
-            var app = new ChatterClient();
-            Assert.Throws<ArgumentException>(() => app.Connect("127.0.0.0.1", 123, "   "));
+            var app = new ChatterClient(new PacketReader(), new PacketWriter());
+            Assert.Throws<ArgumentException>(() => app.Connect("127.0.0.1", 123, "   "));
         }
     }
 }

@@ -15,6 +15,7 @@ namespace Chatter.Core.Data
         Disconnect,
         ConnectSuccessfull,
         ConnectFailed,
-        Error
+        Error,
+        DataReceived
     }
 }

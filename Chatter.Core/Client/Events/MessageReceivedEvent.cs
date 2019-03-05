@@ -6,16 +6,14 @@ using System.Threading.Tasks;
 
 namespace Chatter.Core.Client.Events
 {
-    public class MessageReceivedEventArgs : EventArgs
+    public class MessageReceivedEvent : ClientEvent
     {
-        public MessageReceivedEventArgs()
+        public MessageReceivedEvent(string username, string msg)
         {
+            this.Username = username;
+            this.Message = msg;
         }
-
-        public string Username { get; set; }
-
-        public DateTime Time { get; set; }
-
         public string Message { get; set; }
+        public string Username { get; set; }
     }
 }

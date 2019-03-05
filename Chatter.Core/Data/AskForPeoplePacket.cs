@@ -9,8 +9,8 @@ namespace Chatter.Core.Data
     [Serializable]
     public class AskForPeoplePacket : AuthorizedPacket
     {
-        public AskForPeoplePacket(string username, string secret)
-            :base(PacketType.AskForPeople, username, secret)
+        public AskForPeoplePacket(string username)
+            :base(PacketType.AskForPeople, username)
         { }
     }
 }
